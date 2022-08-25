@@ -1,0 +1,78 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+- job: s2ibuild
+  displayName: Source to image build
+  steps:
+  - task: DockerInstaller@0
+    inputs:
+      dockerVersion: '20.10.9'
+    displayName: Installing container runtime
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        mkdir $(System.DefaultWorkingDirectory)/bin/ && cd $(System.DefaultWorkingDirectory)/bin/ 
+        curl -s https://api.github.com/repos/openshift/source-to-image/releases/latest| grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4  | wget -qi -
+        tar xvf source-to-image*.gz -C $(System.DefaultWorkingDirectory)/bin/
+        $(System.DefaultWorkingDirectory)/bin/s2i version
+    displayName: installing s2i binary
+
+  - task: CmdLine@2
+    inputs: 
+      script: |
+        $(System.DefaultWorkingDirectory)/bin/s2i build $(Build.Repository.LocalPath) \
+        registry.access.redhat.com/ubi8/dotnet-60 --copy \
+        greeting-service
+        docker tag greeting-service:latest microndemos.azurecr.io/greeting-service:latest
+    displayName: running s2i build
+
+  - task: Docker@2
+    displayName: Login to ACR
+    inputs:
+      command: login
+      containerRegistry: demoRegistryConnection
+
+  - task: Docker@2
+    displayName: Push image to Container Registry
+    inputs:
+      command: push
+      containerRegistry: demoRegistryConnection
+      repository: greeting-service
+      tags: |
+        latest
+
+- job: deploy
+  displayName: Deploy to OpenShift
+  dependsOn: s2ibuild
+  steps:
+  - task: oc-setup@2
+    displayName: Setup oc commandline
+    inputs:
+      openshiftService: 'demo'
+      version: '4.10.6'
+  - task: oc-cmd@2
+    displayName: Set project
+    inputs:
+      openshiftService: 'demo'
+      cmd: 'oc project demos'
+      uselocalOc: true
+  - task: HelmInstaller@0
+    displayName: Install Helm cli
+    inputs:
+      helmVersion: '3.8.0'
+      installKubectl: true
+  - task: HelmDeploy@0
+    displayName: Installing application on OpenShift
+    inputs:
+      connectionType: 'None'
+      namespace: 'demos'
+      command: 'upgrade'
+      chartType: 'FilePath'
+      chartPath: $(Build.SourcesDirectory)/deploy/k8s/helm
+      releaseName: 'greeting-service'
+      valueFile: $(Build.SourcesDirectory)/deploy/k8s/helm/Values.yaml  
