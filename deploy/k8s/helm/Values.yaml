@@ -1,0 +1,22 @@
+namespace: demos
+deployment:
+  name: greeting-service
+  replicas: 1
+  annotations:
+    - key: "app.kubernetes.io/managed-by"
+      value: "Helm"
+    - key: "meta.helm.sh/release-name"
+      value: "greeting-service"
+    - key: "meta.helm.sh/release-namespace"
+      value: "demos"
+app:
+  name: greeting-service
+  version: v1
+  istioAutoInject: true
+  containerImage: microndemos.azurecr.io/greeting-service:latest
+  labels: []
+  ports:
+    - name: http
+      port: 8080
+imagePullPolicy: Always
+imagePullSecret: acrcred
