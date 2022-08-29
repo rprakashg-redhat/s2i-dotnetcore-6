@@ -33,7 +33,10 @@ jobs:
           docker version
 
       - name: build
-        run: pack build ${{ inputs.IMAGE_NAME }} \
+        run: |
+          set -x 
+          
+          pack build ${{ inputs.IMAGE_NAME }} \
           --buildpack paketo-buildpacks/dotnet-core \
           --builder paketobuildpacks/builder:base \
           --tags ${{ env.IMAGE_TAGS }}
