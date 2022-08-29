@@ -1,0 +1,26 @@
+name: s2i with buildpacks
+on:
+  workflow_dispatch:
+    inputs:
+      imageName:
+        description: 'Container Image Name'
+        required: true
+        type: string
+env:
+    IMAGE_TAGS: v1 ${{ github.sha }}
+    IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+    REGISTRY_USER: ${{ github.actor }}
+    REGISTRY_PASSWORD: ${{ github.token }}
+
+jobs:
+  build:
+    name: source to container image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2
+      - name: install pack cli
+        run: brew install buildpacks/tap/pack
+      - name: build
+        run: pack build
