@@ -40,8 +40,7 @@ jobs:
       
       # Push the image to GHCR (Image Registry)
       - name: Push To GHCR
-        uses: ./
-        id: push
+        uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ inputs.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAGS }}
