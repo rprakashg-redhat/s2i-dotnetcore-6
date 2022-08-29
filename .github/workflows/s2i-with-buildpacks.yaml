@@ -2,7 +2,7 @@ name: s2i with buildpacks
 on:
   workflow_dispatch:
     inputs:
-      imageName:
+      IMAGE_NAME:
         description: 'Container Image Name'
         required: true
         type: string
@@ -20,7 +20,39 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v2
+      
       - name: install pack cli
         run: brew install buildpacks/tap/pack
+
+      - uses: docker-practice/actions-setup-docker@master
+      - run: |
+          set -x
+          docker version
+
       - name: build
-        run: pack build
+        run: pack build ${{ inputs.IMAGE_NAME }} \
+          --buildpack paketo-buildpacks/dotnet-core \
+          --builder paketobuildpacks/builder:base \
+          --tags ${{ env.IMAGE_TAGS }}
+      
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      # Push the image to GHCR (Image Registry)
+      - name: Push To GHCR
+        uses: ./
+        id: push
+        with:
+          image: ${{ inputs.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAGS }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+          extra-args: |
+            --disable-content-trust
+      
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
