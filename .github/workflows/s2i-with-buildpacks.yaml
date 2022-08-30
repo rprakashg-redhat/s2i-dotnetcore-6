@@ -38,6 +38,9 @@ jobs:
 
           pack build ${{ inputs.IMAGE_NAME }} --buildpack paketo-buildpacks/dotnet-core --builder paketobuildpacks/builder:base --tag ${{ env.IMAGE_TAGS }}
       
+      - name: list images
+        run: |
+          docker ps
       # Push the image to GHCR (Image Registry)
       - name: Push To GHCR
         uses: redhat-actions/push-to-registry@v2
