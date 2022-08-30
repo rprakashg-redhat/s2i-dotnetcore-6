@@ -36,7 +36,7 @@ jobs:
         run: |
           set -x 
 
-          pack build ${{ inputs.IMAGE_NAME }} --buildpack paketo-buildpacks/dotnet-core --builder paketobuildpacks/builder:base --tag ${{ env.IMAGE_TAGS }}
+          pack build ${{ inputs.IMAGE_NAME }} --buildpack paketo-buildpacks/dotnet-core --builder paketobuildpacks/builder:base --tag ${{ inputs.IMAGE_NAME }}:${{ env.IMAGE_TAGS }}
       
       - name: list images
         run: |
