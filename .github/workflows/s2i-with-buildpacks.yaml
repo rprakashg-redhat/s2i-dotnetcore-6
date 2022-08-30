@@ -36,7 +36,7 @@ jobs:
         run: |
           set -x 
 
-          pack build ${{ inputs.IMAGE_NAME }} --buildpack paketo-buildpacks/dotnet-core --builder registry.access.redhat.com/ubi8/dotnet-60 --tag ${{ inputs.IMAGE_NAME }}:${{ env.IMAGE_TAGS }} --run-image registry.access.redhat.com/ubi8/dotnet-60-runtime
+          pack build ${{ inputs.IMAGE_NAME }} --buildpack paketo-buildpacks/dotnet-core --builder paketobuildpacks/builder:base --tag ${{ inputs.IMAGE_NAME }}:${{ env.IMAGE_TAGS }}
       
       - name: list images
         run: |
